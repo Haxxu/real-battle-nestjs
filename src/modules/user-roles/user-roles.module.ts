@@ -3,6 +3,7 @@ import { UserRolesService } from './user-roles.service';
 import { UserRolesController } from './user-roles.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserRole, UserRoleSchema } from './entities/user-role.entity';
+import { UserRolesRepository } from '@repositories/user-roles.repository';
 
 @Module({
 	imports: [
@@ -11,6 +12,13 @@ import { UserRole, UserRoleSchema } from './entities/user-role.entity';
 		]),
 	],
 	controllers: [UserRolesController],
-	providers: [UserRolesService],
+	providers: [
+		UserRolesService,
+		{
+			provide: 'UserRolesRepositoryInterface',
+			useClass: UserRolesRepository,
+		},
+	],
+	exports: [UserRolesService],
 })
 export class UserRolesModule {}
