@@ -11,6 +11,7 @@ import { UserRolesModule } from '@modules/user-roles/user-roles.module';
 import { CollectionsModule } from '@modules/collections/collections.module';
 import { TopicsModule } from '@modules/topics/topics.module';
 import { FlashCardsModule } from '@modules/flash-cards/flash-cards.module';
+import { AuthModule } from '@modules/auth/auth.module';
 
 @Module({
 	imports: [
@@ -67,6 +68,7 @@ import { FlashCardsModule } from '@modules/flash-cards/flash-cards.module';
 		CollectionsModule,
 		TopicsModule,
 		FlashCardsModule,
+		AuthModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

@@ -6,6 +6,7 @@ import {
 	Patch,
 	Param,
 	Delete,
+	SerializeOptions,
 } from '@nestjs/common';
 import { UserRolesService } from './user-roles.service';
 import { CreateUserRoleDto } from './dto/create-user-role.dto';
@@ -20,6 +21,9 @@ export class UserRolesController {
 		return this.userRolesService.create(createUserRoleDto);
 	}
 
+	@SerializeOptions({
+		excludePrefixes: ['first', 'last'],
+	})
 	@Get()
 	findAll() {
 		return this.userRolesService.findAll();

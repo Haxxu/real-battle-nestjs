@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { BaseServiceAbstract } from 'src/services/base/base.abstract.service';
 import { UsersRepositoryInterface } from './interfaces/users.interface';
 import { UserRolesService } from '@modules/user-roles/user-roles.service';
 import { User } from './entities/user.entity';
 import { USER_ROLE } from '@modules/user-roles/entities/user-role.entity';
+import { FindAllResponse } from 'src/types/common.type';
 
 @Injectable()
 export class UsersService extends BaseServiceAbstract<User> {
@@ -30,5 +31,41 @@ export class UsersService extends BaseServiceAbstract<User> {
 			role: user_role,
 		});
 		return user;
+	}
+
+	async findAll(
+		filter?: object,
+		options?: object,
+	): Promise<FindAllResponse<User>> {
+		return await this.users_repository.findAllWithSubFields(filter, {
+			...options,
+			populate: 'role',
+		});
+	}
+
+	async getUserByEmail(email: string): Promise<User> {
+		try {
+			const user = await this.users_repository.findOneByCondition({ email });
+			if (!user) {
+				throw new NotFoundException();
+			}
+			return user;
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async setCurrentRefreshToken(id: string, hashedToken: string): Promise<void> {
+		await this.users_repository.update(id, {
+			current_refresh_token: hashedToken,
+		});
+	}
+
+	async getUserWithRole(user_id: string): Promise<User> {
+		try {
+			return await this.users_repository.getUserWithRole(user_id);
+		} catch (error) {
+			throw error;
+		}
 	}
 }

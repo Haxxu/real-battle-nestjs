@@ -7,6 +7,7 @@ import { Address, AddressSchema } from './address.entity';
 import { FlashCardDocument } from '@modules/flash-cards/entities/flash-card.entity';
 import { NextFunction } from 'express';
 import { CollectionDocument } from '@modules/collections/entities/collection.entity';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -55,11 +56,17 @@ export class User extends BaseEntity {
 	})
 	last_name: string;
 
+	@Expose({ name: 'full_name' })
+	get fullName(): string {
+		return `${this.first_name} ${this.last_name}`;
+	}
+
 	@Prop({
 		required: true,
 		unique: true,
 		match: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
 	})
+	@Expose({ name: 'mail', toPlainOnly: true })
 	email: string;
 
 	@Prop({
@@ -72,9 +79,9 @@ export class User extends BaseEntity {
 	})
 	phone_number: string;
 
+	@Exclude()
 	@Prop({
 		required: true,
-		select: false,
 	})
 	password: string;
 
@@ -99,6 +106,8 @@ export class User extends BaseEntity {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: UserRole.name,
 	})
+	@Type(() => UserRole)
+	@Transform((value) => value.obj.role?.name, { toClassOnly: true })
 	role: UserRole;
 
 	@Prop()
@@ -111,9 +120,20 @@ export class User extends BaseEntity {
 		type: [AddressSchema],
 		default: [],
 	})
+	@Type(() => Address)
 	address: Address[];
 
 	default_address?: string;
+
+	@Prop({
+		default: 'cus_mock_id',
+	})
+	@Exclude()
+	stripe_customer_id: string;
+
+	@Prop()
+	@Exclude()
+	current_refresh_token: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

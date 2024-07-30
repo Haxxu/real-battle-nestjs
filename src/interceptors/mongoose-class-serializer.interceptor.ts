@@ -12,7 +12,9 @@ export default function MongooseClassSerializerInterceptor(
 	return class Interceptor extends ClassSerializerInterceptor {
 		private changePlainObjectToClass(document: PlainLiteralObject) {
 			if (!(document instanceof Document)) {
-				return document;
+				return plainToClass(classToIntercept, document, {
+					excludePrefixes: ['_'],
+				});
 			}
 			return plainToClass(classToIntercept, document.toJSON(), {
 				excludePrefixes: ['_'],

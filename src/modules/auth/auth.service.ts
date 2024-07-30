@@ -1,26 +1,137 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import {
+	BadRequestException,
+	ConflictException,
+	Injectable,
+	UnauthorizedException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+
+import { UsersService } from '@modules/users/users.service';
+import { SignUpDto } from './dto/sign-up.dto';
+import { User } from '@modules/users/entities/user.entity';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { TokenPayload } from './interfaces/token.interface';
+import {
+	access_token_private_key,
+	refresh_token_private_key,
+} from 'src/constraints/jwt.constraint';
 
 @Injectable()
 export class AuthService {
-	create(createAuthDto: CreateAuthDto) {
-		return 'This action adds a new auth';
+	private SALT_ROUND = 11;
+	constructor(
+		private readonly usersService: UsersService,
+		private configService: ConfigService,
+		private readonly jwtService: JwtService,
+	) {}
+
+	async signUp(signUpDto: SignUpDto) {
+		try {
+			const existedUser = await this.usersService.findOneByCondition({
+				email: signUpDto.email,
+			});
+			if (existedUser) {
+				throw new ConflictException('Email already existed!');
+			}
+
+			const hashed_password = await bcrypt.hash(
+				signUpDto.password,
+				this.SALT_ROUND,
+			);
+			const user = await this.usersService.create({
+				...signUpDto,
+				username: `${signUpDto.email.split('@')[0]}${Math.floor(10 + Math.random() * (999 - 10))}`,
+				password: hashed_password,
+			});
+			return user;
+		} catch (error) {
+			throw error;
+		}
 	}
 
-	findAll() {
-		return `This action returns all auth`;
+	async signIn(user_id: string) {
+		try {
+			const accessToken = this.generateAccessToken({ user_id });
+			const refreshToken = this.generateRefreshToken({ user_id });
+			await this.storeRefreshToken(user_id, refreshToken);
+			return {
+				access_token: accessToken,
+				refresh_token: refreshToken,
+			};
+		} catch (error) {
+			throw error;
+		}
 	}
 
-	findOne(id: number) {
-		return `This action returns a #${id} auth`;
+	async getAuthenticatedUser(email: string, password: string): Promise<User> {
+		try {
+			const user = await this.usersService.getUserByEmail(email);
+			await this.verifyPlainContentWithHashedContent(password, user.password);
+			return user;
+		} catch (error) {
+			throw new BadRequestException('Wrong credentials!');
+		}
 	}
 
-	update(id: number, updateAuthDto: UpdateAuthDto) {
-		return `This action updates a #${id} auth`;
+	async getUserIfRefreshTokenMatched(
+		user_id: string,
+		refresh_token: string,
+	): Promise<User> {
+		try {
+			const user = await this.usersService.findOneByCondition({ _id: user_id });
+			if (!user) {
+				throw new UnauthorizedException();
+			}
+
+			await this.verifyPlainContentWithHashedContent(
+				refresh_token,
+				user.current_refresh_token,
+			);
+			return user;
+		} catch (error) {
+			throw error;
+		}
 	}
 
-	remove(id: number) {
-		return `This action removes a #${id} auth`;
+	async verifyPlainContentWithHashedContent(
+		plainText: string,
+		hashedText: string,
+	) {
+		const isMatching = await bcrypt.compare(plainText, hashedText);
+		if (!isMatching) {
+			throw new BadRequestException();
+		}
+	}
+
+	generateAccessToken(payload: TokenPayload) {
+		return this.jwtService.sign(payload, {
+			// algorithm: 'RS256',
+			secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+			// privateKey: access_token_private_key,
+			expiresIn: `${this.configService.get<string>(
+				'JWT_ACCESS_TOKEN_EXPIRATION_TIME',
+			)}s`,
+		});
+	}
+
+	generateRefreshToken(payload: TokenPayload) {
+		return this.jwtService.sign(payload, {
+			// algorithm: 'RS256',
+			secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+			// privateKey: refresh_token_private_key,
+			expiresIn: `${this.configService.get<string>(
+				'JWT_REFRESH_TOKEN_EXPIRATION_TIME',
+			)}s`,
+		});
+	}
+
+	async storeRefreshToken(user_id: string, token: string): Promise<void> {
+		try {
+			const hashedToken = await bcrypt.hash(token, this.SALT_ROUND);
+			await this.usersService.setCurrentRefreshToken(user_id, hashedToken);
+		} catch (error) {
+			throw error;
+		}
 	}
 }
