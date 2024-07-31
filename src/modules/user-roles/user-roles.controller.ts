@@ -11,8 +11,10 @@ import {
 import { UserRolesService } from './user-roles.service';
 import { CreateUserRoleDto } from './dto/create-user-role.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('user-roles')
+@ApiTags('user-roles')
 export class UserRolesController {
 	constructor(private readonly userRolesService: UserRolesService) {}
 

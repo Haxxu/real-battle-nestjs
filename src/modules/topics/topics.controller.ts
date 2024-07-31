@@ -7,19 +7,48 @@ import {
 	Param,
 	Delete,
 	UseGuards,
+	UseInterceptors,
 } from '@nestjs/common';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { JwtAccessTokenGuard } from '@modules/auth/guards/jwt-access-token.guard';
 import { Public } from 'src/decorators/auth.decorator';
+import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('topics')
+@ApiTags('topics')
 @UseGuards(JwtAccessTokenGuard)
 export class TopicsController {
 	constructor(private readonly topicsService: TopicsService) {}
 
 	@Post()
+	@ApiOperation({
+		summary: 'Admin create topic',
+	})
+	@ApiConsumes('multipart/form-data')
+	@ApiBody({
+		schema: {
+			type: 'object',
+			properties: {
+				name: {
+					type: 'string',
+					default: 'Learn Kitchen Vocabulary',
+				},
+				description: { type: 'string', default: 'Some description' },
+				images: {
+					type: 'array',
+					items: {
+						type: 'string',
+						format: 'binary',
+					},
+				},
+			},
+			required: ['name', 'images'],
+		},
+	})
+	@UseInterceptors(FilesInterceptor('images'))
 	create(@Body() createTopicDto: CreateTopicDto) {
 		return this.topicsService.create(createTopicDto);
 	}
