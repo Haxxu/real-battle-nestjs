@@ -12,6 +12,9 @@ import { CollectionsModule } from '@modules/collections/collections.module';
 import { TopicsModule } from '@modules/topics/topics.module';
 import { FlashCardsModule } from '@modules/flash-cards/flash-cards.module';
 import { AuthModule } from '@modules/auth/auth.module';
+import { APP_FILTER } from '@nestjs/core';
+import { GlobalExceptionFilter } from '@modules/exception-filters/global-exception.filter';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
 	imports: [
@@ -63,6 +66,16 @@ import { AuthModule } from '@modules/auth/auth.module';
 			inject: [ConfigService],
 		}),
 
+		BullModule.forRootAsync({
+			inject: [ConfigService],
+			useFactory: async (configService: ConfigService) => ({
+				connection: {
+					host: configService.get('REDIS_HOST'),
+					port: configService.get('REDIS_PORT'),
+				},
+			}),
+		}),
+
 		UsersModule,
 		UserRolesModule,
 		CollectionsModule,
@@ -71,6 +84,9 @@ import { AuthModule } from '@modules/auth/auth.module';
 		AuthModule,
 	],
 	controllers: [AppController],
-	providers: [AppService],
+	providers: [
+		AppService,
+		{ provide: APP_FILTER, useClass: GlobalExceptionFilter },
+	],
 })
 export class AppModule {}

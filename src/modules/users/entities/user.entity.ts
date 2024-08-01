@@ -8,6 +8,7 @@ import { FlashCardDocument } from '@modules/flash-cards/entities/flash-card.enti
 import { NextFunction } from 'express';
 import { CollectionDocument } from '@modules/collections/entities/collection.entity';
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { DailyCheckIn } from './daily-check-in.entity';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -134,6 +135,12 @@ export class User extends BaseEntity {
 	@Prop()
 	@Exclude()
 	current_refresh_token: string;
+
+	daily_check_in?: DailyCheckIn[];
+
+	last_check_in: Date; // Ngày check-in gần nhất
+
+	last_get_check_in_rewards: Date; // Ngày nhận quà check-in gần nhất
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

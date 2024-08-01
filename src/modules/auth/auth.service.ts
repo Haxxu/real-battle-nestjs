@@ -16,6 +16,7 @@ import {
 	access_token_private_key,
 	refresh_token_private_key,
 } from 'src/constraints/jwt.constraint';
+import { ERRORS_DICTIONARY } from 'src/constraints/error-dictionary';
 
 @Injectable()
 export class AuthService {
@@ -70,7 +71,10 @@ export class AuthService {
 			await this.verifyPlainContentWithHashedContent(password, user.password);
 			return user;
 		} catch (error) {
-			throw new BadRequestException('Wrong credentials!');
+			throw new BadRequestException({
+				message: ERRORS_DICTIONARY.WRONG_CREDENTIALS,
+				details: 'Wrong credentials!',
+			});
 		}
 	}
 
