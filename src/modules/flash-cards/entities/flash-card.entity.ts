@@ -13,7 +13,7 @@ export class FlashCard extends BaseEntity {
 	@Prop({ required: true })
 	vocabulary: string;
 
-	@Prop({ required: true })
+	@Prop()
 	image: string;
 
 	@Prop({ required: true })

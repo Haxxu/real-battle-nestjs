@@ -67,6 +67,8 @@ export class AuthService {
 
 	async getAuthenticatedUser(email: string, password: string): Promise<User> {
 		try {
+			console.log('hellloo...............');
+
 			const user = await this.usersService.getUserByEmail(email);
 			await this.verifyPlainContentWithHashedContent(password, user.password);
 			return user;

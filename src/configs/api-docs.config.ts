@@ -13,9 +13,11 @@ export function configSwagger(app: INestApplication) {
 		.setTitle('Flash card project')
 		.setDescription('## The flash card API description')
 		.setVersion('1.0')
-		.setBasePath('/api')
 		.addBearerAuth()
+		.setBasePath('/api')
 		.build();
+
+	app.setGlobalPrefix('api');
 
 	const document = SwaggerModule.createDocument(app, config);
 	fs.writeFileSync('swagger.json', JSON.stringify(document));

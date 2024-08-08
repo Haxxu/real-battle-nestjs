@@ -11,10 +11,10 @@ import { BullModule } from '@nestjs/bullmq';
 		MongooseModule.forFeature([
 			{ name: FlashCard.name, schema: FlashCardSchema },
 		]),
-		// BullModule.registerQueue({
-		// 	name: 'image:optimize',
-		// 	prefix: 'flash-cards',
-		// }),
+		BullModule.registerQueue({
+			name: 'image:optimize',
+			prefix: 'flash-cards',
+		}),
 	],
 	controllers: [FlashCardsController],
 	providers: [

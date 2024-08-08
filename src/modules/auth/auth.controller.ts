@@ -11,6 +11,7 @@ import {
 	ApiConflictResponse,
 	ApiCreatedResponse,
 	ApiOperation,
+	ApiResponse,
 	ApiTags,
 } from '@nestjs/swagger';
 
@@ -127,6 +128,41 @@ export class AuthController {
 	}
 
 	@UseGuards(LocalAuthGuard)
+	@Post('sign-in')
+	@ApiBody({
+		type: SignUpDto,
+		examples: {
+			user_1: {
+				value: {
+					first_name: 'John',
+					last_name: 'Doe',
+					email: 'johndoe@example.com',
+					password: 'User@123',
+				} as SignUpDto,
+			},
+			user_2: {
+				value: {
+					first_name: 'Michael',
+					last_name: 'Smith',
+					email: 'michaelsmith@example.com',
+					password: 'User@123',
+				} as SignUpDto,
+			},
+		},
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		content: {
+			'application/json': {
+				example: {
+					statusCode: 400,
+					message: 'Wrong credentials!!',
+					error: 'Bad Request',
+				},
+			},
+		},
+	})
 	@Post('sign-in')
 	async signIn(@Req() request: RequestWithUser) {
 		const { user } = request;

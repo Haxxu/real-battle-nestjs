@@ -26,6 +26,38 @@ services:
       - ./mongo-data:/data/db # Mount data ra bên ngoài để tránh dữ liệu bị xóa khi remove container
     restart: unless-stopped
 
+  flash_cards_mongo_express:
+    container_name: flash_cards_mongo_express
+    image: mongo-express:latest
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: ${DATABASE_USERNAME} # 2 biến này dùng làm basic
+      ME_CONFIG_BASICAUTH_PASSWORD: ${DATABASE_PASSWORD} # auth khi truy cập mongo_express
+      ME_CONFIG_MONGODB_URL: ${DATABASE_URI}?authSource=admin # Đây là thông tin kết nối tới database
+    ports:
+      - 8082:8081 # Expose ra port 8082 để truy cập
+    depends_on:
+      - flash_cards_mongodb
+    restart: unless-stopped
+
+  flash_cards_redis:
+    container_name: flash_cards_redis
+    image: redis:alpine
+    expose:
+      - 6379
+    ports:
+      - 6379:6379 # Public port để lát nữa test multiple worker
+    restart: unless-stopped
+
+  flash_cards_redis_commander:
+    container_name: flash_cards_redis_commander
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:flash_cards_redis:6379
+    ports:
+      - 8088:8081
+    depends_on:
+      - flash_cards_redis
+
 networks:
   default:
     driver: bridge

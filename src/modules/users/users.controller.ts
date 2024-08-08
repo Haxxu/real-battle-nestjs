@@ -43,9 +43,6 @@ export class UsersController {
 	// @SerializeOptions({
 	// 	excludePrefixes: ['first', 'last'],
 	// })
-	@Roles(USER_ROLE.USER)
-	@UseGuards(RolesGuard)
-	@UseGuards(JwtAccessTokenGuard)
 	findAll() {
 		return this.usersService.findAll();
 	}

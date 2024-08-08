@@ -17,7 +17,7 @@ async function postData(url, data = {}) {
 }
 
 const AUTH_CREDENTIALS = {
-	email: 'user1@example.com',
+	email: 'johndoe@example.com',
 	password: 'User@123',
 };
 
