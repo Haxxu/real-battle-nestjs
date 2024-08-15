@@ -8,6 +8,7 @@ import {
 	Delete,
 	UseGuards,
 	UseInterceptors,
+	Req,
 } from '@nestjs/common';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
@@ -16,6 +17,7 @@ import { JwtAccessTokenGuard } from '@modules/auth/guards/jwt-access-token.guard
 import { Public } from 'src/decorators/auth.decorator';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { RequestWithUser } from 'src/types/request.type';
 
 @Controller('topics')
 @ApiTags('topics')
@@ -49,7 +51,10 @@ export class TopicsController {
 		},
 	})
 	@UseInterceptors(FilesInterceptor('images'))
-	create(@Body() createTopicDto: CreateTopicDto) {
+	@Public()
+	create(@Body() createTopicDto: CreateTopicDto, @Req() req: RequestWithUser) {
+		console.log('create topic', req.user);
+
 		return this.topicsService.create(createTopicDto);
 	}
 

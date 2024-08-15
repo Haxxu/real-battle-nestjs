@@ -67,8 +67,7 @@ export class AuthService {
 
 	async getAuthenticatedUser(email: string, password: string): Promise<User> {
 		try {
-			console.log('hellloo...............');
-
+			console.log('-----------getAuthenticatedUser-----------');
 			const user = await this.usersService.getUserByEmail(email);
 			await this.verifyPlainContentWithHashedContent(password, user.password);
 			return user;
@@ -85,6 +84,7 @@ export class AuthService {
 		refresh_token: string,
 	): Promise<User> {
 		try {
+			console.log('-----------getUserIfRefreshTokenMatched-----------');
 			const user = await this.usersService.findOneByCondition({ _id: user_id });
 			if (!user) {
 				throw new UnauthorizedException();
@@ -104,6 +104,8 @@ export class AuthService {
 		plainText: string,
 		hashedText: string,
 	) {
+		console.log('-----------verifyPlainContentWithHashedContent-----------');
+
 		const isMatching = await bcrypt.compare(plainText, hashedText);
 		if (!isMatching) {
 			throw new BadRequestException();
