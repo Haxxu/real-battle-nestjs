@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { AuthService } from '@modules/auth/auth.service';
 import { TokenPayload } from '@modules/auth/interfaces/token.interface';
-import { refresh_token_public_key } from 'src/constraints/jwt.constraint';
+// import { refresh_token_public_key } from 'src/constraints/jwt.constraint';
 
 @Injectable()
 export class JwtRefreshTokenStrategy extends PassportStrategy(

@@ -72,4 +72,12 @@ export abstract class BaseRepositoryAbstract<T extends BaseEntity>
 
 		return !!(await this.model.findByIdAndDelete(id));
 	}
+
+	async insertMany(items: T[]): Promise<T[]> {
+		return (await this.model.insertMany(items)) as any;
+	}
+
+	async count(condition: object): Promise<number> {
+		return await this.model.countDocuments(condition);
+	}
 }

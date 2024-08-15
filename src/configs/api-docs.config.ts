@@ -13,7 +13,11 @@ export function configSwagger(app: INestApplication) {
 		.setTitle('Flash card project')
 		.setDescription('## The flash card API description')
 		.setVersion('1.0')
-		.addBearerAuth()
+		.addSecurity('token', {
+			type: 'http',
+			scheme: 'bearer',
+			bearerFormat: 'JWT',
+		})
 		.setBasePath('/api')
 		.build();
 

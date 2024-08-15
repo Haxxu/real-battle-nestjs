@@ -10,6 +10,8 @@ import {
 	UseGuards,
 	Req,
 	UploadedFile,
+	Query,
+	ParseIntPipe,
 } from '@nestjs/common';
 import { FlashCardsService } from './flash-cards.service';
 import { CreateFlashCardDto } from './dto/create-flash-card.dto';
@@ -31,6 +33,9 @@ import {
 	UserRole,
 } from '@modules/user-roles/entities/user-role.entity';
 import { Roles } from 'src/decorators/roles.decorator';
+import { ApiDocsPagination } from 'src/decorators/swagger-form-data.decorator';
+import { FlashCard } from './entities/flash-card.entity';
+import { LoggingInterceptor } from 'src/interceptors/logging.interceptor';
 
 @Controller('flash-cards')
 @ApiTags('flash-cards')
@@ -101,9 +106,13 @@ export class FlashCardsController {
 	}
 
 	@Get()
-	@UseGuards(JwtAccessTokenGuard)
-	findAll() {
-		return this.flashCardsService.findAll();
+	@UseInterceptors(LoggingInterceptor)
+	@ApiDocsPagination(FlashCard.name)
+	findAll(
+		@Query('offset', ParseIntPipe) offset: number,
+		@Query('limit', ParseIntPipe) limit: number,
+	) {
+		return this.flashCardsService.findAll({}, { offset, limit });
 	}
 
 	@Get(':id')
@@ -122,5 +131,13 @@ export class FlashCardsController {
 	@Delete(':id')
 	remove(@Param('id') id: string) {
 		return this.flashCardsService.remove(id);
+	}
+
+	@Post('seed-data')
+	@ApiBearerAuth('token')
+	@UseGuards(JwtAccessTokenGuard)
+	// @Public()
+	seedFlashCards(@Req() { user }: RequestWithUser) {
+		return this.flashCardsService.seedData(user);
 	}
 }

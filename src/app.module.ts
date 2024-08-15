@@ -18,17 +18,17 @@ import { BullModule } from '@nestjs/bullmq';
 
 @Module({
 	imports: [
-		ConfigModule.forRoot({
-			validationSchema: Joi.object({
-				NODE_ENV: Joi.string()
-					.valid('development', 'production', 'test', 'provision', 'staging')
-					.default('development'),
-				PORT: Joi.number().default(8080),
-			}),
-			validationOptions: {
-				abortEarly: false,
-			},
-		}),
+		// ConfigModule.forRoot({
+		// 	validationSchema: Joi.object({
+		// 		NODE_ENV: Joi.string()
+		// 			.valid('development', 'production', 'test', 'provision', 'staging')
+		// 			.default('development'),
+		// 		PORT: Joi.number().default(8080),
+		// 	}),
+		// 	validationOptions: {
+		// 		abortEarly: false,
+		// 	},
+		// }),
 		// ConfigModule.forRoot({
 		// 	isGlobal: true,
 		// 	envFilePath: process.env.NODE_ENV === 'development' ? '.env.dev' : '.env',
