@@ -9,6 +9,8 @@ import { FindAllResponse } from 'src/types/common.type';
 import { User } from '@modules/users/entities/user.entity';
 import * as fs from 'fs';
 import { join } from 'path';
+import { Types } from 'mongoose';
+import { generateNextKey } from 'src/shared/utils/pagination';
 
 @Injectable()
 export class FlashCardsService extends BaseServiceAbstract<FlashCard> {
@@ -76,5 +78,61 @@ export class FlashCardsService extends BaseServiceAbstract<FlashCard> {
 			console.log(error);
 			throw error;
 		}
+	}
+
+	async findAllUsingKeysetPagination(
+		filter: { search: string },
+		{ last_id, last_vocabulary }: { last_vocabulary: string; last_id: string },
+		options: { limit: number },
+	): Promise<FindAllResponse<FlashCard>> {
+		const pagination_query = {},
+			api_query = {};
+		let final_query = {};
+
+		let lastObjectId;
+		if (last_id) {
+			if (Types.ObjectId.isValid(last_id)) {
+				lastObjectId = new Types.ObjectId(last_id);
+			} else {
+				throw new Error(`Invalid ObjectId: ${last_id}`);
+			}
+		}
+
+		if (lastObjectId && last_vocabulary) {
+			pagination_query['$or'] = [
+				{
+					vocabulary: {
+						$gt: last_vocabulary,
+					},
+				},
+				{
+					vocabulary: last_vocabulary,
+					_id: {
+						$gt: lastObjectId,
+					},
+				},
+			];
+		}
+
+		if (filter.search) {
+			api_query['vocabulary'] = {
+				$regex: filter.search,
+			};
+			final_query['$and'] = [api_query, pagination_query];
+		} else {
+			final_query = pagination_query;
+		}
+		const [{ items }, count] = await Promise.all([
+			this.flash_cards_repository.findAll(final_query, {
+				limit: options.limit,
+				sort: { vocabulary: 1, _id: 1 },
+			}),
+			this.flash_cards_repository.count(api_query),
+		]);
+		return {
+			count,
+			items,
+			next_key: generateNextKey(items, ['vocabulary', 'meaning']),
+		};
 	}
 }

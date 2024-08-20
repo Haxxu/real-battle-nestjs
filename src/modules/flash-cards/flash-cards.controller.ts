@@ -12,6 +12,7 @@ import {
 	UploadedFile,
 	Query,
 	ParseIntPipe,
+	BadRequestException,
 } from '@nestjs/common';
 import { FlashCardsService } from './flash-cards.service';
 import { CreateFlashCardDto } from './dto/create-flash-card.dto';
@@ -21,6 +22,7 @@ import {
 	ApiBody,
 	ApiConsumes,
 	ApiOperation,
+	ApiQuery,
 	ApiTags,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -36,6 +38,8 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { ApiDocsPagination } from 'src/decorators/swagger-form-data.decorator';
 import { FlashCard } from './entities/flash-card.entity';
 import { LoggingInterceptor } from 'src/interceptors/logging.interceptor';
+import { Types } from 'mongoose';
+import { generateNextKey } from 'src/shared/utils/pagination';
 
 @Controller('flash-cards')
 @ApiTags('flash-cards')
@@ -139,5 +143,40 @@ export class FlashCardsController {
 	// @Public()
 	seedFlashCards(@Req() { user }: RequestWithUser) {
 		return this.flashCardsService.seedData(user);
+	}
+
+	@Get('keyset-pagination')
+	@ApiQuery({ name: 'last_id', required: false })
+	@ApiQuery({ name: 'last_vocabulary', required: false })
+	@ApiQuery({ name: 'search', required: false })
+	@ApiQuery({ name: 'offset', required: false })
+	@UseInterceptors(LoggingInterceptor)
+	async findAllUsingKeyset(
+		@Query('search') search: string,
+		@Query('last_id') last_id: string,
+		@Query('last_vocabulary') last_vocabulary: string,
+		@Query('limit', ParseIntPipe) limit: number,
+		@Query('offset') offset: number,
+	) {
+		if (last_id && !Types.ObjectId.isValid(last_id)) {
+			throw new BadRequestException('Invalid last_id format');
+		}
+
+		if (offset) {
+			const { count, items } = await this.flashCardsService.findAll(
+				{ search },
+				{ offset, limit },
+			);
+			return {
+				count,
+				items,
+				next_key: generateNextKey(items, ['vocabulary', 'meaning']),
+			};
+		}
+		return this.flashCardsService.findAllUsingKeysetPagination(
+			{ search },
+			{ last_id, last_vocabulary },
+			{ limit },
+		);
 	}
 }
